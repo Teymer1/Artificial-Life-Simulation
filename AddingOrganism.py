@@ -1,4 +1,4 @@
-from Organism import Organism
+﻿from Organism import Organism
 from Fox import Fox
 from Wolf import Wolf
 from Sheep import Sheep
@@ -12,43 +12,23 @@ from SosnowskyHogweed import SosnowskyHogweed
 from Wolfberries import Wolfberries
 
 class AddingOrganism:
-   def __init__(self, organism_vector, Index, cursor_x:int, cursor_y:int, Width:int, Height:int):
-       self.organism_vector = organism_vector
-       self.Index = Index
+    def __init__(self, organism_vector, index, cursor_x, cursor_y, width, height):
+        creature_map = {
+            0: Fox, 1: Wolf, 3: Sheep, 4: CyberSheep,
+            5: Antelope, 6: Turtle, 7: Grass, 8: Dandelion,
+            9: Guarana, 10: Wolfberries, 11: SosnowskyHogweed
+        }
 
-       if self.Index == 0:
-            self.organism_vector.append(Fox(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Fox on ({cursor_x},{cursor_y})")
-       elif self.Index == 1:
-            self.organism_vector.append(Wolf(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Wolf on ({cursor_x},{cursor_y})")
-       elif self.Index == 3:
-            self.organism_vector.append(Sheep(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Sheep on ({cursor_x},{cursor_y})")
-       elif self.Index == 4:
-            self.organism_vector.append(CyberSheep(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Cyber Sheep on ({cursor_x},{cursor_y})")
-       elif self.Index == 5:
-            self.organism_vector.append(Antelope(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Antelope on ({cursor_x},{cursor_y})")
-       elif self.Index == 6:
-            self.organism_vector.append(Turtle(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Turtle on ({cursor_x},{cursor_y})")
-       elif self.Index == 7:
-            self.organism_vector.append(Grass(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Grass on ({cursor_x},{cursor_y})")
-       elif self.Index == 8:
-            self.organism_vector.append(Dandelion(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Dandelion on ({cursor_x},{cursor_y})")
-       elif self.Index == 9:
-            self.organism_vector.append(Guarana(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Guarana on ({cursor_x},{cursor_y})")
-       elif self.Index == 10:
-            self.organism_vector.append(Wolfberries(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - Wolfberries on ({cursor_x},{cursor_y})")
-       elif self.Index == 11:
-            self.organism_vector.append(SosnowskyHogweed(koord_x=cursor_x, koord_y=cursor_y, width=Width,height=Height))
-            Organism.results.append(f"Created a new organism - SosnowskyHogweed on ({cursor_x},{cursor_y})")
+        creature_class = creature_map.get(index)
 
-
-
+        if creature_class:
+            new_organism = creature_class(
+                koord_x=cursor_x, 
+                koord_y=cursor_y, 
+                width=width, 
+                height=height
+            )
+            organism_vector.append(new_organism)
+            
+            msg = f"Created a new organism - {new_organism.name} on ({cursor_x},{cursor_y})"
+            Organism.results.append(msg)

@@ -1,82 +1,81 @@
-from Animal import Animal
+﻿from Animal import Animal
 import tkinter.messagebox as messagebox
 import sys
 
 class Human(Animal):
-   def __init__(self, width=None, height=None, organism_vector=None, koord_x=None, koord_y=None):
-     super().__init__(width, height, organism_vector, koord_x, koord_y)
-     self.name = "Human";
-     self.index = 2;
-     self.power = 5;
-     self.initiative = 4;
-     self.color = "black"
-     self.alzura_board = False
-     self.skill_cooldown = 0
+    def __init__(self, width=None, height=None, organism_vector=None, koord_x=None, koord_y=None):
+        super().__init__(width, height, organism_vector, koord_x, koord_y)
+        self.name = "Human"
+        self.index = 2
+        self.power = 5
+        self.initiative = 4
+        self.color = "black"
+        self.alzura_board = False
+        self.skill_cooldown = 0
 
-   def action(self, game_world, organism_vector):
-    self.game_world = game_world
-    self.organism_vector = organism_vector
+    def action(self, game_world, organism_vector):
+        self.game_world = game_world
+        self.organism_vector = organism_vector
+        key = self.game_world.key
 
-    if self.game_world.key == 'Up' and self.koord_y != 0:
-        self.koord_y -= 1
-    elif self.game_world.key == 'Down' and self.koord_y != self.Height - 1:
-        self.koord_y += 1
-    elif self.game_world.key == 'Left' and self.koord_x != 0:
-        self.koord_x -= 1
-    elif self.game_world.key == 'Right' and self.koord_x != self.Width - 1:
-        self.koord_x += 1
+        old_x, old_y = self.koord_x, self.koord_y
 
-    if self.koord_y % 2 == 0:
-      if self.game_world.key == 'Home' and self.koord_x != 0 and self.koord_y != 0:
-          self.koord_x -= 1
-          self.koord_y -= 1  
-      elif self.game_world.key == 'Prior' and self.koord_y != 0:
-          self.koord_y -= 1
+        if key == 'Up' and self.koord_y > 0:
+            self.koord_y -= 1
+        elif key == 'Down' and self.koord_y < self.Height - 1:
+            self.koord_y += 1
+        elif key == 'Left' and self.koord_x > 0:
+            self.koord_x -= 1
+        elif key == 'Right' and self.koord_x < self.Width - 1:
+            self.koord_x += 1
 
-      if self.Height % 2 == 0:
-         if self.game_world.key == 'End' and self.koord_x != 0:
-             self.koord_x -= 1
-             self.koord_y += 1
-         elif self.game_world.key == 'Next':
-             self.koord_y += 1
-      elif self.Height % 2 == 1:
-          if self.game_world.key == 'End' and self.koord_x != 0 and self.koord_y != self.Height-1:
-             self.koord_y += 1
-             self.koord_x -= 1
-          elif self.game_world.key == 'Next' and self.koord_x != self.Width - 1 and self.koord_y != self.Height-1:
-              self.koord_x += 1
-              self.koord_y += 1
-    elif self.koord_y % 2 == 1:
-       if self.game_world.key == 'Home':
-          self.koord_y -= 1  
-       elif self.game_world.key == 'Prior' and self.koord_x != self.Width - 1:
-          self.koord_y -= 1
-          self.koord_x += 1
+        is_even_row = (self.koord_y % 2 == 0)
+        if key in ['Home', 'Prior', 'End', 'Next']:
+            self._handle_hex_move(key, is_even_row)
 
-       if self.Height % 2 == 0:
-         if self.game_world.key == 'End' and self.koord_y != self.Height-1:
-             self.koord_y += 1
-         elif self.game_world.key == 'Next' and self.koord_y != self.Height-1 and self.koord_x != self.Width-1:
-             self.koord_y += 1
-             self.koord_x += 1
-       elif self.Height % 2 == 1:
-          if self.game_world.key == 'End':
-             self.koord_y += 1
-             self.koord_x -= 1
-          elif self.game_world.key == 'Next' and self.koord_x != self.Width - 1:
-              self.koord_x += 1
-              self.koord_y += 1
+        if old_x == self.koord_x and old_y == self.koord_y:
+            return False
 
+        for organism in list(self.organism_vector):
+            if organism is not self and self.koord_x == organism.koord_x and self.koord_y == organism.koord_y:
+                if self.is_reproduction_collision(organism):
+                    break
+        
+        return True 
 
-    for organisms in self.organism_vector:
-        self.is_moved_board = False
-        if self.is_reproduction_collision(organisms):
-            break
+    def _handle_hex_move(self, key, is_even):
+        if key == 'Home':  
+            if self.koord_y > 0:
+                if is_even and self.koord_x > 0: 
+                    self.koord_x -= 1
+                self.koord_y -= 1
+        
+        elif key == 'Prior':  
+            if self.koord_y > 0:
+                if not is_even and self.koord_x < self.Width - 1: 
+                    self.koord_x += 1
+                self.koord_y -= 1
+        
+        elif key == 'End':  
+            if self.koord_y < self.Height - 1:
+                if is_even and self.koord_x > 0: 
+                    self.koord_x -= 1
+                self.koord_y += 1
+        
+        elif key == 'Next':  
+            if self.koord_y < self.Height - 1:
+                if not is_even and self.koord_x < self.Width - 1: 
+                    self.koord_x += 1
+                self.koord_y += 1
 
+    def breeding(self, partner):
+        pass
 
+    def Collision(self, organism):
+        if self.is_alzura_board(organism):
+            return
 
-   def Collision(self, organism):
-    super().Collision(organism)
-    if self.is_lost:
-        messagebox.showinfo("End of the game", "You lost \nTo close the game, press \"OK\"")
-        sys.exit(0)
+        super().Collision(organism)
+        if self.is_lost:
+            messagebox.showinfo("End of the game", f"You were killed by {organism.name}!")
+            sys.exit(0)

@@ -99,27 +99,30 @@ class World:
     self.canvas.delete("all")
 
     if self.hex_style == False:
-     ArrowsField = tk.Label(self.new_window, text="Arrows - Moving", font=self.fontsize, bg="lightgrey")
-     ArrowsField.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=20)
+     arrows_field = tk.Label(self.new_window, text="Arrows - Moving", font=self.fontsize, bg="lightgrey")
+     arrows_field.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=20)
 
     if self.hex_style == True:
-        ArrowsField = tk.Label(self.new_window, text="NumPad(1,4,7,9,6,3) - Moving", font=self.fontsize, bg="lightgrey")
-        ArrowsField.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=20)
+        arrows_field = tk.Label(self.new_window, text="NumPad(1,4,7,9,6,3) - Moving", font=self.fontsize, bg="lightgrey")
+        arrows_field.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=20)
 
-    EscapePole = tk.Label(self.new_window, text="Escape - Game over", font=self.fontsize, bg="lightgrey")
-    EscapePole.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=45)
+    escape_field = tk.Label(self.new_window, text="Escape - Game over", font=self.fontsize, bg="lightgrey")
+    escape_field.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=45)
 
-    NowaTuraPole = tk.Label(self.new_window, text="Space - New round", font=self.fontsize, bg="lightgrey")
-    NowaTuraPole.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=70)
+    new_tour_field = tk.Label(self.new_window, text="Space - New round", font=self.fontsize, bg="lightgrey")
+    new_tour_field.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=70)
 
     skill_field = tk.Label(self.new_window, text="R - Skill", font=self.fontsize, bg="lightgrey")
     skill_field.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=95)
 
-    SaveGameField = tk.Label(self.new_window, text="S - Save game", font=self.fontsize, bg="lightgrey")
-    SaveGameField.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=120)
+    save_game_field = tk.Label(self.new_window, text="S - Save game", font=self.fontsize, bg="lightgrey")
+    save_game_field.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=120)
+
+    start_cursor = tk.Label(self.new_window, text="U - Activate cursor", font=self.fontsize, bg="lightgrey")
+    start_cursor.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=145)
 
     DodacorganismPole = tk.Label(self.new_window, text="Y - Add a new organism", font=self.fontsize, bg="lightgrey")
-    DodacorganismPole.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=145)
+    DodacorganismPole.place(x=self.BOARD_WIDTH+self.PLANSZA_X*3, y=170)
 
     Tura = tk.Label(self.new_window, text="Tour number : " + str(self.nr_tury), font=self.fontsize, bg="lightgrey")
     Tura.place(x=250, y=2)
@@ -139,7 +142,7 @@ class World:
        if name not in used_names:  
         used_names.add(name)  
         if self.hex_style == False:
-          y = 167 + offset
+          y = 200 + offset
           self.canvas.create_text(self.BOARD_WIDTH + 40, y-5, text=" - " + name, font=self.fontsize, anchor="w")
           self.canvas.create_rectangle(self.BOARD_WIDTH + 20, y - 12, self.BOARD_WIDTH + 20 + 15, y - 12 + 15, fill=organism.color)
           offset += 20
@@ -196,7 +199,7 @@ class World:
     
  def choose_being(self):
     if self.is_free_space():
-        WyborIstot = creature_selection_panel(self.organism_vector,self.cursorX,self.cursorY, self.Width, self.Height)
+        WyborIstot = CreatureSelectionPanel(self.organism_vector,self.cursorX,self.cursorY, self.Width, self.Height)
        
 
 
@@ -213,12 +216,12 @@ class World:
         self.key = event.keysym
         if self.key == 'u':
            if self.hex_style == False:
-                self.is_activated_cursor = True
+                self.is_activated_cursor = not self.is_activated_cursor
                 self.draw_history_board()
                 self.draw_results()
                 self.draw_animals()
            elif self.hex_style == True:
-                self.is_activated_cursor = True
+                self.is_activated_cursor = not self.is_activated_cursor
                 self.draw_history_board()
                 self.draw_hex_board()
                 self.draw_results()
@@ -324,24 +327,32 @@ class World:
 
 
  def main_game(self):
-       self.end_of_turn = True
-       rozmiar_organismow = len(self.organism_vector)
-       organism = self.organism_vector[rozmiar_organismow - 1]
-       for i in range(len(self.organism_vector)):
-           if i >= len(self.organism_vector):
-                  break
-           self.organism_vector[i].action(self,self.organism_vector)
-           if self.organism_vector[i].is_lost:
-                self.organism_vector.pop(i)
-           if organism.name == self.organism_vector[i].name and organism.koord_x == self.organism_vector[i].koord_x and organism.koord_y == self.organism_vector[i].koord_y:
-                 break
-       for organism in self.organism_vector:
-          if organism.index == 2:
-            if organism.skill_cooldown > 0:
-              organism.skill_cooldown -= 1
-       self.nr_tury += 1
+    human = next((o for o in self.organism_vector if o.index == 2), None)
+    
+    if human:
+        success = human.action(self, self.organism_vector)
+        if not success:
+            self.end_of_turn = False
+            return 
 
-       self.organism_vector = sorted(self.organism_vector, key=lambda x: x.initiative, reverse=True)
+    self.end_of_turn = True
+    
+    for organism in list(self.organism_vector):
+        if organism.index == 2: 
+            continue
+            
+        if not organism.is_lost:
+            organism.action(self, self.organism_vector)
+            
+    self.organism_vector = [o for o in self.organism_vector if not o.is_lost]
+            
+    for organism in self.organism_vector:
+        if organism.index == 2:
+            if organism.skill_cooldown > 0:
+                organism.skill_cooldown -= 1
+    
+    self.nr_tury += 1
+    self.organism_vector = sorted(self.organism_vector, key=lambda x: x.initiative, reverse=True)
 
 
  def save_game(self):
