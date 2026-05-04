@@ -63,7 +63,7 @@ class World:
     self.organism_vector = StworzoneOrganism.getorganism_vector()
     self.vector_for_history = self.organism_vector.copy()
 
-    empty_board = tk.Button(self.new_window, text="Empty board", font=("Arial", 12), command=self.Pustaplansza)
+    empty_board = tk.Button(self.new_window, text="Empty board", font=("Arial", 12), command=self.EmptyBoard)
     empty_board.place(x=350, y=self.BOARD_HEIGHT+70)
 
     self.draw_history_board()
@@ -74,15 +74,15 @@ class World:
     self.new_window.mainloop()
   
 
- def Pustaplansza(self):
+ def EmptyBoard(self):
     for organism in self.organism_vector:
         if organism.index == 2:
-            czlowiek_x = organism.koord_x
-            czlowiek_y = organism.koord_y
+            human_x = organism.koord_x
+            human_y = organism.koord_y
             break
 
     self.organism_vector.clear()
-    self.organism_vector.append(Human(koord_x=czlowiek_x, koord_y=czlowiek_y, width=self.Width,height=self.Height))
+    self.organism_vector.append(Human(koord_x=human_x, koord_y=human_y, width=self.Width,height=self.Height))
 
     if self.hex_style == False:
       self.draw_history_board()
@@ -148,7 +148,7 @@ class World:
           offset += 20
 
         elif self.hex_style == True:
-            Wiercholki = [
+            Vertices = [
                 x, y-13,                                                   
                 x + int(20*0.5), y-13,                             
                 x + int(20*0.75), y + int(20*0.5)-13,       
@@ -156,7 +156,7 @@ class World:
                 x, y + 20-13,                                         
                 x - int(20*0.25), y + int(20*0.5)-13       
                ] 
-            self.canvas.create_polygon(Wiercholki, fill=organism.color)
+            self.canvas.create_polygon(Vertices, fill=organism.color)
             self.canvas.create_text(self.BOARD_WIDTH + 45, y-5, text=" - " + name, font=self.fontsize, anchor="w")
             y += 20+5
 
@@ -211,119 +211,92 @@ class World:
     return wolne == len(self.organism_vector)
 
 
+ def refresh_screen(self):
+    self.canvas.delete("all")
+    self.draw_history_board()
+    self.draw_results()
+    if self.hex_style:
+        self.draw_hex_board()
+    else:
+        self.draw_animals()
+
 
  def keyPressed(self, event):
-        self.key = event.keysym
-        if self.key == 'u':
-           if self.hex_style == False:
-                self.is_activated_cursor = not self.is_activated_cursor
-                self.draw_history_board()
-                self.draw_results()
-                self.draw_animals()
-           elif self.hex_style == True:
-                self.is_activated_cursor = not self.is_activated_cursor
-                self.draw_history_board()
-                self.draw_hex_board()
-                self.draw_results()
+    self.key = event.keysym
 
-        if self.is_activated_cursor:
-            if self.key == 'y':
-                self.choose_being()
+    if self.key == 'Escape':
+        sys.exit(0)
+    if self.key == 's':
+        self.save_game()
+        return
+    if self.key == 'u':
+        self.is_activated_cursor = not self.is_activated_cursor
+        self.refresh_screen()
+        return
 
+    if self.is_activated_cursor:
+        if self.key == 'y':
+            self.choose_being()
+        elif self.key == 'space':
+            self.is_activated_cursor = False
+            self.organism_vector.sort(key=lambda x: x.initiative, reverse=True)
+        else:
             self.moving_cursor()
-            if self.hex_style == False:
-                self.canvas.delete("all")
-                self.draw_history_board()
-                self.draw_results()
-                self.draw_animals()
-            elif self.hex_style == True:
-                self.draw_history_board()
-                self.draw_hex_board()
-                self.draw_results()
+        self.refresh_screen()
 
-        if self.is_activated_cursor == False:
-            for organism in self.organism_vector:
-              if organism.index == 2:
-               if self.key == 'r':
-                   if organism.skill_cooldown == 0:
-                    organism.skill_cooldown = 11
-                    organism.alzura_board = True
-               if organism.skill_cooldown == 5:
-                    organism.alzura_board = False
-               break
-            if (self.key == 'Up' or self.key == 'Down' or self.key == 'Left' or self.key == 'Right') and not self.end_of_turn and not self.hex_style:
-                self.main_game()
-                self.canvas.delete("all")
-                self.draw_history_board()
-                self.draw_animals()
-                self.draw_results()
+    else:
+        if self.key == 'r':
+            for org in self.organism_vector:
+                if org.index == 2: # Human
+                    if org.skill_cooldown == 0:
+                        org.skill_cooldown = 11
+                        org.alzura_board = True
+                    break
+        
+        is_move = False
+        if not self.hex_style:
+            if self.key in ['Up', 'Down', 'Left', 'Right']:
+                is_move = True
+        else:
+            if self.key in ['Prior', 'Home', 'Left', 'End', 'Next', 'Right']:
+                is_move = True
 
-            if (self.key == 'Prior' or self.key == 'Home' or self.key == 'Left' or self.key == 'End' or self.key == 'Next' or self.key == 'Right') and not self.end_of_turn and self.hex_style:
-                self.main_game()
-                self.draw_history_board()
-                self.draw_hex_board()
-                self.draw_results()
+        if is_move and not self.end_of_turn:
+            self.main_game()
+            self.refresh_screen()
 
-            if self.key == 'space' and self.end_of_turn:
-              self.end_of_turn = False
-        if self.key == 'Escape':
-             sys.exit(0)
-        if self.key == 's':
-            self.save_game()
+        if self.key == 'space' and self.end_of_turn:
+            self.end_of_turn = False
+            self.refresh_screen()
 
 
  def moving_cursor(self):
-       if self.key == 'Up' and self.cursorY > 0:
-                self.cursorY -= 1
-       elif self.key == 'Down' and self.cursorY < self.Height - 1:
-                self.cursorY += 1
-       elif self.key == 'Left' and self.cursorX > 0:
-                self.cursorX -= 1
-       elif self.key == 'Right' and self.cursorX < self.Width - 1:
-                self.cursorX += 1
-       if self.hex_style == True:
-               if self.cursorY % 2 == 0:
-                 if self.key == 'Home' and self.cursorX != 0 and self.cursorY != 0:
-                   self.cursorX -= 1
-                   self.cursorY -= 1  
-                 elif self.key == 'Prior' and self.cursorY != 0:
-                   self.cursorY -= 1
-                 if self.Height % 2 == 0:
-                    if self.key == 'End' and self.cursorX != 0:
-                       self.cursorX -= 1
-                       self.cursorY += 1
-                    elif self.key == 'Next':
-                       self.cursorY += 1
-                 elif self.Height % 2 == 1:
-                     if self.key == 'End' and self.cursorX != 0 and self.cursorY != self.Height-1:
-                        self.cursorY += 1
-                        self.cursorX -= 1
-                     elif self.key == 'Next' and self.cursorX != self.Width - 1 and self.cursorY != self.Height-1:
-                        self.cursorX += 1
-                        self.cursorY += 1
-               elif self.cursorY % 2 == 1:
-                  if self.key == 'Home':
-                     self.cursorY -= 1  
-                  elif self.key == 'Prior' and self.cursorX != self.Width - 1:
-                      self.cursorY -= 1
-                      self.cursorX += 1
-                  if self.Height % 2 == 0:
-                    if self.key == 'End' and self.cursorY != self.Height-1:
-                      self.cursorY += 1
-                    elif self.key == 'Next' and self.cursorY != self.Height-1 and self.cursorX != self.Width-1:
-                       self.cursorY += 1
-                       self.cursorX += 1
-                  elif self.Height % 2 == 1:
-                       if self.key == 'End':
-                         self.cursorY += 1
-                         self.cursorX -= 1
-                       elif self.key == 'Next' and self.cursorX != self.Width - 1:
-                          self.cursorX += 1
-                          self.cursorY += 1
+    if not self.hex_style:
+        if self.key == 'Up' and self.cursorY > 0: self.cursorY -= 1
+        elif self.key == 'Down' and self.cursorY < self.Height - 1: self.cursorY += 1
+        elif self.key == 'Left' and self.cursorX > 0: self.cursorX -= 1
+        elif self.key == 'Right' and self.cursorX < self.Width - 1: self.cursorX += 1
+        return
 
-       if self.key == 'space':
-              self.is_activated_cursor = False
-              self.organism_vector = sorted(self.organism_vector, key=lambda x: x.initiative, reverse=True)
+    is_even = (self.cursorY % 2 == 0)
+    
+    move_map = {
+        'Left': (-1, 0),
+        'Right': (1, 0),
+        'Home':  (0 if is_even else -1, -1),
+        'Prior': (1 if is_even else 0, -1),
+        'End':   (0 if is_even else -1, 1),
+        'Next':  (1 if is_even else 0, 1)
+    }
+
+    if self.key in move_map:
+        dx, dy = move_map[self.key]
+        new_x = self.cursorX + dx
+        new_y = self.cursorY + dy
+
+        if 0 <= new_x < self.Width and 0 <= new_y < self.Height:
+            self.cursorX = new_x
+            self.cursorY = new_y
 
 
  def main_game(self):
@@ -387,52 +360,29 @@ class World:
         lista_organismow = pickle.load(file)
     
     self.organism_vector = []  
-    
+        
+    CREATURE_CLASSES = {
+        "Fox": Fox,
+        "Wolf": Wolf,
+        "Human": Human,
+        "Sheep": Sheep,
+        "Cyber Sheep": CyberSheep,
+        "Turtle": Turtle,
+        "Antelope": Antelope,
+        "Dandelion": Dandelion,
+        "Grass": Grass,
+        "Guarana": Guarana,
+        "Wolfberries": Wolfberries,
+        "SosnowskyHogweed": SosnowskyHogweed
+    }
+
     for organism_dict in lista_organismow:
-        if organism_dict["name"] == "Fox":
-            organism = Fox()
-        elif organism_dict["name"] == "Wolf":
-            organism = Wolf()
-        elif organism_dict["name"] == "Human":
-            organism = Human()
-        elif organism_dict["name"] == "Sheep":
-            organism = Sheep()
-        elif organism_dict["name"] == "Cyber Sheep":
-            organism = CyberSheep()
-        elif organism_dict["name"] == "Turtle":
-            organism = Turtle()
-        elif organism_dict["name"] == "Antelope":
-            organism = Antelope()
-        elif organism_dict["name"] == "Dandelion":
-            organism = Dandelion()
-        elif organism_dict["name"] == "Grass":
-            organism = Grass()
-        elif organism_dict["name"] == "Guarana":
-            organism = Guarana()
-        elif organism_dict["name"] == "Wolfberries":
-            organism = Wolfberries()
-        elif organism_dict["name"] == "SosnowskyHogweed":
-            organism = SosnowskyHogweed()
-        else:
-            continue  
-        
-        organism.name = organism_dict["name"]
-        organism.index = organism_dict["index"]
-        organism.power = organism_dict["power"]
-        organism.initiative = organism_dict["initiative"]
-        organism.color = organism_dict["color"]
-        organism.koord_x = organism_dict["koord_x"]
-        organism.koord_y = organism_dict["koord_y"]
-        organism.Width = organism_dict["Width"]
-        organism.Height = organism_dict["Height"]
-        organism.cybersheep_goal = organism_dict["cybersheep_goal"]
-        organism.is_success_attack = organism_dict["is_success_attack"]
-        organism.is_antelope = organism_dict["is_antelope"]
-        organism.alzura_board = organism_dict["alzura_board"]
-        organism.reproduction_break = organism_dict["reproduction_break"]
-        organism.skill_cooldown = organism_dict["skill_cooldown"]
-        
-        self.organism_vector.append(organism)  
+        cls = CREATURE_CLASSES.get(organism_dict["name"])
+        if cls:
+            organism = cls()
+            for key, value in organism_dict.items():
+                setattr(organism, key, value)
+            self.organism_vector.append(organism) 
 
     self.Width = organism_dict["Width"]
     self.Height = organism_dict["Height"]
@@ -479,7 +429,7 @@ class World:
         y = self.PLANSZA_Y + self.size_y*nr_line
         for j in range(self.Width):
 
-             Wiercholki = [
+             Vertices = [
                 x, y,                                                     
                 x + int(self.size_x*0.5), y,                              
                 x + int(self.size_x*0.75), y + int(self.size_y*0.5),       
@@ -487,7 +437,7 @@ class World:
                 x, y + self.size_y,                                        
                 x - int(self.size_x*0.25), y + int(self.size_y*0.5)       
                ] 
-             self.canvas.create_polygon(Wiercholki, fill="white")
+             self.canvas.create_polygon(Vertices, fill="white")
              koord_po_x += 1
              x += self.size_x
         nr_line += 1
@@ -503,7 +453,7 @@ class World:
                  x = self.PLANSZA_X + int(self.size_x*0.75)+organism.koord_x*self.size_x
         y = self.PLANSZA_Y + self.size_y*organism.koord_y
 
-        Wiercholki = [
+        Vertices = [
                 x, y,                                                      
                 x + int(self.size_x*0.5), y,                              
                 x + int(self.size_x*0.75), y + int(self.size_y*0.5),      
@@ -512,7 +462,7 @@ class World:
                 x - int(self.size_x*0.25), y + int(self.size_y*0.5)       
               ] 
 
-        self.canvas.create_polygon(Wiercholki, fill=organism.color)
+        self.canvas.create_polygon(Vertices, fill=organism.color)
 
     if self.is_activated_cursor:
        if self.cursorY % 2 == 0:
