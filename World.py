@@ -1,5 +1,6 @@
 ﻿import tkinter as tk
 from tkinter import font
+from xml.etree.ElementTree import tostring
 from CreateOrganism import CreateOrganism
 import sys
 from CreatureSelectionPanel import CreatureSelectionPanel
@@ -139,11 +140,13 @@ class World:
 
     for organism in self.vector_for_history:
        name = organism.name
+       power = organism.power
+
        if name not in used_names:  
         used_names.add(name)  
         if self.hex_style == False:
           y = 200 + offset
-          self.canvas.create_text(self.BOARD_WIDTH + 40, y-5, text=" - " + name, font=self.fontsize, anchor="w")
+          self.canvas.create_text(self.BOARD_WIDTH + 40, y-5, text=" - " + name +" (power: "+str(power)+")", font=self.fontsize, anchor="w")
           self.canvas.create_rectangle(self.BOARD_WIDTH + 20, y - 12, self.BOARD_WIDTH + 20 + 15, y - 12 + 15, fill=organism.color)
           offset += 20
 
@@ -163,7 +166,7 @@ class World:
 
     read_button = tk.Button(self.new_window, text="Load the game", font=("Arial", 12), command=self.load_game)
     read_button.place(x=90, y=self.BOARD_HEIGHT+70)
-    change_fields = tk.Button(self.new_window, text="Change field", font=("Arial", 12), command=self.BoardType)
+    change_fields = tk.Button(self.new_window, text="Change board", font=("Arial", 12), command=self.BoardType)
     change_fields.place(x=220, y=self.BOARD_HEIGHT+70)
 
 
@@ -479,6 +482,3 @@ class World:
                 x - int(self.size_x*0.25), y + int(self.size_y*0.5)       
                ] 
        self.canvas.create_polygon(Cursor, fill="thistle1")
-
-
-        

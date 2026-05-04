@@ -49,7 +49,7 @@ class Turtle(Animal):
         )
         
         if organism.name == "Human":
-            messagebox.showinfo("Game over", "You lost!")
+            messagebox.showinfo("Game over", f"You were defeated by {self.name}!")
             sys.exit(0)
 
         if self.is_plus_3_power(organism):

@@ -77,5 +77,5 @@ class Human(Animal):
 
         super().Collision(organism)
         if self.is_lost:
-            messagebox.showinfo("End of the game", f"You were killed by {organism.name}!")
+            messagebox.showinfo("End of the game", f"You were killed by {organism.name} with power {organism.power}!")
             sys.exit(0)
